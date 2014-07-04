@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db import models
+from django.utils import six
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe, SafeData
 from django.utils.functional import curry
@@ -12,7 +13,11 @@ _rendered_field_name = lambda name: '_%s_rendered' % name
 
 def _get_render_func(dotted_path, **kwargs):
     (module, func) = dotted_path.rsplit('.', 1)
-    func = getattr(__import__(module, {}, {}, [func]), func)
+    if len(module.split('.')) > 1:
+        fromlist = [func] if six.PY3 else [func.encode('ascii')]
+    else:
+        fromlist = []
+    func = getattr(__import__(module, {}, {}, fromlist), func)
     return curry(func, **kwargs)
 
 try:

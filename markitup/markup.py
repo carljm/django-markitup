@@ -30,6 +30,7 @@ django-template-utils_.
 from __future__ import unicode_literals
 
 from django.utils.functional import curry, wraps
+from django.utils import six
 
 from markitup.settings import MARKITUP_PREVIEW_FILTER
 
@@ -38,5 +39,9 @@ if MARKITUP_PREVIEW_FILTER is None:
 else:
     filter_path, filter_kwargs = MARKITUP_PREVIEW_FILTER
     module, funcname = filter_path.rsplit('.', 1)
-    func = getattr(__import__(module, {}, {}, [funcname]), funcname)
+    if len(module.split('.')) > 1:
+        fromlist = [funcname] if six.PY3 else [funcname.encode('ascii')]
+    else:
+        fromlist = []
+    func = getattr(__import__(module, {}, {}, fromlist), funcname)
     filter_func = wraps(func)(curry(func, **filter_kwargs))

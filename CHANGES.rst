@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+2.2.1 (not released)
+--------------------
+
+* Fixed ``TypeError: Item in ``from list'' not a string`` error in Python 2.
+
+
 2.2 (2014.07.03)
 ----------------
 
