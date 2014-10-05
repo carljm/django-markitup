@@ -34,7 +34,7 @@ class MarkupFieldTests(TestCase):
 
     def testUnicodeRender(self):
         self.assertEqual(str(self.post.body),
-                          u'replacement text')
+                          'replacement text')
 
     def testLength(self):
         self.assertEqual(len(self.post.body), 16)
@@ -49,7 +49,7 @@ class MarkupFieldTests(TestCase):
 
     def testRendered(self):
         self.assertEqual(self.post.body.rendered,
-                          u'replacement text')
+                          'replacement text')
 
     def testLoadBack(self):
         post = Post.objects.get(pk=self.post.pk)
@@ -60,13 +60,13 @@ class MarkupFieldTests(TestCase):
         self.post.body = 'replace this other text'
         self.post.save()
         self.assertEqual(str(self.post.body),
-                         u'replacement other text')
+                         'replacement other text')
 
     def testAssignToRaw(self):
         self.post.body.raw = 'new text, replace this'
         self.post.save()
         self.assertEqual(str(self.post.body),
-                         u'new text, replacement')
+                         'new text, replacement')
 
     def testAssignToRendered(self):
         def _invalid_assignment():
@@ -145,7 +145,7 @@ class MarkupFieldFormTests(TestCase):
     def testFormFieldContents(self):
         form = self.form_class(instance=self.post)
         self.assertHTMLEqual(str(form['body']),
-                          u'<textarea id="id_body" rows="10" cols="40" name="body">**markdown**</textarea>')
+                          '<textarea id="id_body" rows="10" cols="40" name="body">**markdown**</textarea>')
 
     def testAdminFormField(self):
         ma = admin.ModelAdmin(Post, admin.site)
@@ -162,11 +162,11 @@ class HiddenFieldFormTests(TestCase):
     def testHiddenFieldContents(self):
         form = self.form_class(instance=self.post)
         self.assertHTMLEqual(str(form['body']), (
-            u'<textarea id="id_body" rows="10" cols="40" name="body">'
-            u'[link](http://example.com) &amp; &quot;text&quot;'
-            u'</textarea><input type="hidden" name="initial-body" value="'
-            u'[link](http://example.com) &amp; &quot;text&quot;" '
-            u'id="initial-id_body" />'
+            '<textarea id="id_body" rows="10" cols="40" name="body">'
+            '[link](http://example.com) &amp; &quot;text&quot;'
+            '</textarea><input type="hidden" name="initial-body" value="'
+            '[link](http://example.com) &amp; &quot;text&quot;" '
+            'id="initial-id_body" />'
         ))
 
 
