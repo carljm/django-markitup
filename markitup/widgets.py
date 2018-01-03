@@ -3,7 +3,10 @@ from __future__ import unicode_literals
 import posixpath
 from django import forms
 from django.contrib.admin.widgets import AdminTextareaWidget
-from django.core.urlresolvers import NoReverseMatch, reverse
+try:
+    from django.core.urlresolvers import NoReverseMatch, reverse
+except ImportError:
+    from django.urls import NoReverseMatch, reverse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from markitup import settings
