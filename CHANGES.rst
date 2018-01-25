@@ -4,7 +4,7 @@ CHANGES
 master (unreleased)
 -------------------
 
-* none yet
+* Add compatibility with Django == 2.0.
 
 3.0.0 (2016.09.04)
 ------------------

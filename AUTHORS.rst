@@ -7,6 +7,7 @@ Ivan Ven Osdel <ivan@wimpyanalytics.com>
 James Turk <james.p.turk@gmail.com>
 Jannis Leidel <jannis@enn.io>
 Jeremy Carbaugh
+Kyrylo Havrylenko <havrylenko.k@gmail.com>
 Mike Korobov <kmike84@gmail.com>
 Mikhael Korneev
 Neil Muller
