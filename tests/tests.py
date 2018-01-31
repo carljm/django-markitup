@@ -239,67 +239,80 @@ class TemplatefilterTests(MIUTestCase):
                                                   'replace this text'}))
 
 
-class RenderTests(MIUTestCase):
-    look_for = 'var element = $("#my_id");'
-    auto_preview_override = True
-
-    def test_widget_render(self):
-        widget = MarkItUpWidget()
-        self.assertIn(self.look_for,
-                      widget.render('name', 'value', {'id': 'my_id'}))
-
-    def test_widget_render_with_custom_id(self):
-        widget = MarkItUpWidget(attrs={'id': 'my_id'})
-        self.assertIn(self.look_for,
-                      widget.render('name', 'value'))
-
-    def test_widget_render_preview_parser_path(self):
-        widget = MarkItUpWidget()
-        self.assertIn('mySettings["previewParserPath"] = "/markitup/preview/";',
-                      widget.render('name', 'value', {'id': 'my_id'}))
-
-    def test_templatetag_render(self):
-        template = """{% load markitup_tags %}{% markitup_editor "my_id" %}"""
-        self.assertIn(self.look_for,
-                      self.render(template))
-
-    def test_templatetag_render_preview_parser_path(self):
-        template = """{% load markitup_tags %}{% markitup_editor "my_id" %}"""
-        self.assertIn('mySettings["previewParserPath"] = "/markitup/preview/";',
-                      self.render(template))
-
-    def test_per_widget_auto_preview_override(self):
-        widget = MarkItUpWidget(auto_preview=self.auto_preview_override)
-        self.assertIn(AutoPreviewSettingTests.look_for,
-                      widget.render('name', 'value', {'id': 'my_id'}),
-                      reverse=not self.auto_preview_override)
-
-    def test_per_ttag_auto_preview_override(self):
-        if self.auto_preview_override:
-            arg = "auto_preview"
-        else:
-            arg = "no_auto_preview"
-        template = """{%% load markitup_tags %%}{%% markitup_editor "my_id" "%s" %%}""" % (arg,)
-        self.assertIn(AutoPreviewSettingTests.look_for,
-                      self.render(template),
-                      reverse=not self.auto_preview_override)
-
-
-class AutoPreviewSettingTests(RenderTests):
-    look_for = "$('a[title=\"Preview\"]').trigger('mouseup');"
-    auto_preview_override = False
+class RenderTestMixin(object):
+    look_for = 'OVERRIDE ME'
+    look_for_auto_preview = 'data-auto-preview="1"'
 
     def setUp(self):
         self._old_auto = settings.MARKITUP_AUTO_PREVIEW
-        settings.MARKITUP_AUTO_PREVIEW = True
 
     def tearDown(self):
         settings.MARKITUP_AUTO_PREVIEW = self._old_auto
+
+    def render_subject(self, auto_preview=None):
+        raise NotImplemented('OVERRIDE ME')
+
+    def test_render(self):
+        self.assertIn(self.look_for, self.render_subject())
+
+    def test_render_preview_parser_path(self):
+        self.assertIn('data-preview-url="/markitup/preview/"',
+                      self.render_subject())
+
+    def test_auto_preview_setting(self):
+        settings.MARKITUP_AUTO_PREVIEW = True
+        self.assertIn(self.look_for_auto_preview, self.render_subject())
+
+    def test_auto_preview_override(self):
+        self.assertIn(self.look_for_auto_preview,
+                      self.render_subject(True))
+
+    def test_auto_preview_override_setting(self):
+        settings.MARKITUP_AUTO_PREVIEW = True
+        self.assertIn(self.look_for_auto_preview,
+                      self.render_subject(False),
+                      reverse=True)
+
+
+class RenderTemplateTagTests(RenderTestMixin, MIUTestCase):
+    look_for = 'data-element="#my_id"'
+
+    def render_subject(self, auto_preview=None):
+        if auto_preview is True:
+            params = '"auto_preview"'
+        elif auto_preview is False:
+            params = '"no_auto_preview"'
+        else:
+            params = ''
+        template = ('{% load markitup_tags %}{% markitup_editor "my_id" '
+                    + params + ' %}')
+        return self.render(template)
+
+
+class RenderWidgetTests(RenderTestMixin, MIUTestCase):
+    look_for = 'class="django-markitup-widget"'
+
+    def render_subject(self, auto_preview=None):
+        widget = MarkItUpWidget(auto_preview=auto_preview)
+        return widget.render('name', 'value')
 
 
 class TemplatetagMediaUrlTests(MIUTestCase):
     maxDiff = None
     prefix = '/static'
+
+    @property
+    def script_tags(self):
+        return (
+            '<script type="text/javascript" '
+            'src="%(prefix)s/markitup/ajax_csrf.js"></script>\n'
+            '<script type="text/javascript" '
+            'src="%(prefix)s/markitup/jquery.markitup.js"></script>\n'
+            '<script type="text/javascript" '
+            'src="%(prefix)s/markitup/sets/default/set.js"></script>\n'
+            '<script type="text/javascript" '
+            'src="%(prefix)s/markitup/django-markitup.js"></script>'
+        ) % {'prefix': self.prefix}
 
     def setUp(self):
         self._reset_storage()
@@ -339,9 +352,7 @@ class TemplatetagMediaUrlTests(MIUTestCase):
         out = """<link href="%(prefix)s/markitup/skins/simple/style.css" type="text/css" media="screen" rel="stylesheet" />
 <link href="%(prefix)s/markitup/sets/default/style.css" type="text/css" media="screen" rel="stylesheet" />
 <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-<script type="text/javascript" src="%(prefix)s/markitup/ajax_csrf.js"></script>
-<script type="text/javascript" src="%(prefix)s/markitup/jquery.markitup.js"></script>
-<script type="text/javascript" src="%(prefix)s/markitup/sets/default/set.js"></script>""" % {'prefix': self.prefix}
+""" % {'prefix': self.prefix} + self.script_tags
         return out
 
     # JQUERY_URL settings and resulting link
@@ -382,12 +393,7 @@ class TemplatetagMediaUrlTests(MIUTestCase):
                 else:
                     self.assertHTMLEqual(
                         self._get_js(),
-                        (
-                            '<script type="text/javascript" src="%(prefix)s/markitup/ajax_csrf.js"></script>\n'
-                            '<script type="text/javascript" src="%(prefix)s/markitup/jquery.markitup.js"></script>\n'
-                            '<script type="text/javascript" src="%(prefix)s/markitup/sets/default/set.js"></script>'
-                            % {'prefix': self.prefix}
-                            ))
+                        self.script_tags)
         finally:
             settings.JQUERY_URL = _old_jquery_url
 
