@@ -141,8 +141,7 @@ If you prefer to link CSS and Javascript from different locations, the
 ``markitup_media`` tag can be replaced with two separate tags,
 ``markitup_css`` and ``markitup_js``. ``markitup_js`` accepts a
 parameter to suppress jQuery inclusion, just like
-``markitup_media``. (Note that jQuery must be included in your
-template before the ``markitup_editor`` tag is used).
+``markitup_media``.
 
 Last, use the ``markitup_editor`` template tag to apply the MarkItUp!
 editor to a textarea in your page. It accepts one argument, the HTML

@@ -23,6 +23,7 @@ def _get_markitup_context():
         'MARKITUP_SKIN': absolute_url(settings.MARKITUP_SKIN).rstrip('/'),
         'MARKITUP_JS': absolute_url('markitup/jquery.markitup.js'),
         'AJAXCSRF_JS': absolute_url('markitup/ajax_csrf.js'),
+        'DJANGO_MARKITUP_JS': absolute_url('markitup/django-markitup.js'),
         }
     if settings.JQUERY_URL is not None:
         context['JQUERY_URL'] = absolute_url(settings.JQUERY_URL)

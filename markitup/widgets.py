@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 import posixpath
 from django import forms
 from django.contrib.admin.widgets import AdminTextareaWidget
-from django.core.urlresolvers import NoReverseMatch, reverse
-from django.template.loader import render_to_string
-from django.utils.safestring import mark_safe
+from django.core.urlresolvers import NoReverseMatch, reverse_lazy
 from markitup import settings
 from markitup.util import absolute_url
 
@@ -55,35 +53,32 @@ class MarkItUpWidget(MarkupTextarea):
         if auto_preview is None:
             auto_preview = settings.MARKITUP_AUTO_PREVIEW
         self.auto_preview = auto_preview
+
+        try:
+            preview_url = reverse_lazy('markitup_preview')
+        except NoReverseMatch:
+            preview_url = ""
+
+        attrs = attrs or {}
+        classes = attrs.get('class', '').split()
+        attrs['class'] = ' '.join(classes + ['django-markitup-widget'])
+        attrs['data-preview-url'] = preview_url
+        if auto_preview:
+            attrs['data-auto-preview'] = '1'
+
         super(MarkItUpWidget, self).__init__(attrs)
 
     def _media(self):
         js_media = [absolute_url(settings.JQUERY_URL)] if settings.JQUERY_URL is not None else []
         js_media = js_media + [absolute_url('markitup/ajax_csrf.js'),
                                absolute_url('markitup/jquery.markitup.js'),
-                               posixpath.join(self.miu_set, 'set.js')]
+                               posixpath.join(self.miu_set, 'set.js'),
+                               absolute_url('markitup/django-markitup.js')]
         return forms.Media(
             css={'screen': (posixpath.join(self.miu_skin, 'style.css'),
                             posixpath.join(self.miu_set, 'style.css'))},
             js=js_media)
     media = property(_media)
-
-    def render(self, name, value, attrs=None):
-        html = super(MarkItUpWidget, self).render(name, value, attrs)
-
-        final_attrs = self.build_attrs(attrs)
-
-        try:
-            preview_url = reverse('markitup_preview')
-        except NoReverseMatch:
-            preview_url = ""
-
-        html += render_to_string('markitup/editor.html',
-                                 {'textarea_id': final_attrs['id'],
-                                 'AUTO_PREVIEW': self.auto_preview,
-                                 'preview_url': preview_url})
-
-        return mark_safe(html)
 
 
 class AdminMarkItUpWidget(MarkItUpWidget, AdminTextareaWidget):
