@@ -29,4 +29,4 @@
             }
         }
     });
- })(jQuery);
+ })(jQuery || django.jQuery);

@@ -662,4 +662,4 @@
 			$('textarea').trigger('insertion', [options]);
 		}
 	};
-})(jQuery);
+})(jQuery || django.jQuery);
